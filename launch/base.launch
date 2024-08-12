@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <!-- Launch a pedestrian and roadmap scenario -->
+    <arg name="roadmap_map" default="maps/open_space/24.xml"/>
+    <arg name="pedestrian_scenario" default="open_space/24.xml"/>
+
+    <node pkg="jackal_socialsim" type="condition_check.py" name="condition_check" output="screen"/>
+
+    <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
+        <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
+        <arg name="static" value="false"/>
+    </include>
+
+    <include file="$(find roadmap)/launch/roadmap.launch">
+        <arg name="map_file_name" value="$(arg roadmap_map)"/>
+    </include>
+
+</launch>  

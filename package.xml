@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>jackal_socialsim</name>
+  <version>0.0.0</version>
+  <description>The jackal_socialsim package</description>
+
+  <maintainer email="r2c1@todo.todo">r2c1</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>roadmap</exec_depend>
+  <exec_depend>pedestrian_simulator</exec_depend>
+
+  <export>
+  </export>
+</package>
