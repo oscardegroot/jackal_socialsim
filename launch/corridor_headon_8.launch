@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <!-- <rosparam param="condition_check/condition_type">close_to_point</rosparam>
+    <rosparam param="condition_check/target_x">5</rosparam>
+    <rosparam param="condition_check/target_y">5</rosparam>
+    <rosparam param="condition_check/threshold_distance">1</rosparam> -->
+
+    <rosparam param="condition_check/condition_type">exceed_value</rosparam>
+    <rosparam param="condition_check/max_x">20</rosparam>
+    <rosparam param="condition_check/max_y">20</rosparam>
+
+    <!-- Launch a pedestrian and roadmap scenario -->
+    <include file="$(find jackal_socialsim)/launch/base.launch">
+        <arg name="pedestrian_scenario" value="llm/8_headon.xml"/>
+        <arg name="roadmap_map" value="maps/straight.xml"/>
+    </include>
+
+
+</launch>  
