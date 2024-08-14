@@ -11,6 +11,8 @@
     <rosparam param="condition_check/max_x">26</rosparam>
     <rosparam param="condition_check/max_y">26</rosparam>
 
+    <rosparam param="condition_check/timeout">30</rosparam>
+
     <!-- Launch a pedestrian and roadmap scenario -->
     <include file="$(find jackal_socialsim)/launch/base.launch">
         <arg name="pedestrian_scenario" value="open_space/24.xml"/>
