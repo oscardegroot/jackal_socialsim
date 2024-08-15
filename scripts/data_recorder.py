@@ -182,7 +182,6 @@ class DataRecorderNode:
             self._reset = False
 
             # Add metrics
-            print("Adding metric collisions at " + str(self._collisions))
             self._data.add_metric("collisions", copy.deepcopy(self._collisions))
             self._collisions = 0
 

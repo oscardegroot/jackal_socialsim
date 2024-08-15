@@ -29,7 +29,7 @@ def split_data(data, remove_first=True):
     
     # Split the data based on the reset values
     for reset in reset_values:
-        end_index = start_index + reset
+        end_index = reset
         subset = {key: value[start_index:end_index] for key, value in data.items() if key != "reset" and is_continuous_data(key)}
         datasets.append(subset)
         start_index = end_index
@@ -42,10 +42,15 @@ def split_data(data, remove_first=True):
 
     if remove_first:
         datasets.pop(0)
+
+    # for dataset in datasets
     
     return datasets
 
 def load_experiment_data(base_folder, scenario, experiment, verbose=False):
+    if verbose:
+        print(f"Loading data for {scenario} Experiment: {experiment}")
+
     # Load data from the specified JSON file
     data = load_data(base_folder, scenario, experiment)
 

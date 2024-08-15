@@ -82,7 +82,7 @@ class RobotStateMonitor:
 
     def publish_reset(self):
         # Publish an empty message to reset the simulation
-        rospy.loginfo_throttle(1, "Condition met. Publishing reset.")
+        # rospy.loginfo_throttle(1, "Condition met. Publishing reset.")
         self.reset_pub.publish(Empty())
         self.publish_goal()
         self.start_time = time.perf_counter()
