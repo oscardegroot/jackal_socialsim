@@ -13,5 +13,6 @@ catkin_python_setup()
 catkin_install_python(PROGRAMS
   scripts/condition_check.py
   scripts/data_recorder.py
+  scripts/spawn_walls.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
