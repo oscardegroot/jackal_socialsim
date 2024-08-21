@@ -6,9 +6,9 @@ The scenario is defined in xml format as demonstrated in the example below.
 **Static Obstacles** are added with various commands, including 
 
 - `hallway_x` (hallway in x direction)
-- `hallway_y` (hallway in x direction)
+- `hallway_y` (hallway in y direction)
 - `intersection` (four way intersection)
-- `wall_off` (close off parts of a hallway)
+- `wall_off` (close off parts of a hallway set to `1`)
 - `obstacle_size` (a single wall at x,y with size length_x, length_y)
 
 Note that hallways are shortened by half the width to make specification simpler.
@@ -80,4 +80,4 @@ Some example environments are visualized below:
 
 **S-Shaped Corridor:**
 
-![S shape](docs/s_shape.png) |
+![S shape](docs/s_shape.png)
