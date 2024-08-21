@@ -81,3 +81,31 @@ Some example environments are visualized below:
 **S-Shaped Corridor:**
 
 ![S shape](docs/s_shape.png)
+
+
+### Defining a simulation
+The simulation consists of a scenario and a goal description that is either:
+
+- Navigate to a goal (done when closer than x m to the goal)
+- Pass a certain line (max_x or max_y). Can be used when following a path.
+
+These are defined in the launch files, e.g.:
+
+```xml
+<arg name="map" default="corridor_with_doors.xml"/>
+
+<!-- <rosparam param="condition_check/condition_type">close_to_point</rosparam>
+<rosparam param="condition_check/target_x">0</rosparam>
+<rosparam param="condition_check/target_y">8</rosparam>
+<rosparam param="condition_check/threshold_distance">3</rosparam> -->
+
+<rosparam param="condition_check/condition_type">exceed_value</rosparam>
+<rosparam param="condition_check/max_x">50</rosparam>
+<rosparam param="condition_check/max_y">100</rosparam>
+
+<rosparam param="condition_check/timeout">40</rosparam>
+```
+
+Note that the `target_x` and `target_y` values determine where the goal will be (it publishes the goal).
+
+The timout is useful to reset if the robot got stuck.
