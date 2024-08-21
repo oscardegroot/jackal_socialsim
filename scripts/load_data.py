@@ -1,5 +1,6 @@
 import json
 import os, sys
+import glob
 
 def is_continuous_data(data_name):
     return "metric" not in data_name and "scenario" not in data_name and "experiment" not in data_name
@@ -70,6 +71,16 @@ def load_experiment_data(base_folder, scenario, experiment, verbose=False):
     assert len(experiment) > 0, "Data is empty"
 
     return experiments
+
+def get_all_experiments_for_scenario(base_folder, scenario, filter=[]):
+    folder_path = f"{base_folder}/data/{scenario}/"
+
+    # Use glob to find all .json files in the folder
+    json_files = glob.glob(os.path.join(folder_path, '*.json'))
+
+    # Create a list of file names without extensions
+    return [os.path.splitext(os.path.basename(file))[0] for file in json_files if file not in filter]
+
 
 if __name__ == "__main__":
     # Example usage

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tag type="social"/>
+
+<!--Obstacles-->
+<hallway_x x="0" y="0" length="10.0" width="6.0"/>
+<intersection x="13" y="0" length="3.0" width="6.0"/>
+<hallway_x x="16" y="0" length="20.0" width="6.0"/>
+<hallway_y x="13" y="3" length="20.0" width="6.0"/>
+<hallway_y x="13" y="-3" length="-20.0" width="6.0"/>
+
+<random>
+    <range_x min="11" max="15"/>
+    <range_y min="-12" max="-3"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="0" y="30"/>   
+</random>
+
+<random>
+    <range_x min="11" max="15"/>
+    <range_y min="3" max="12"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="0" y="-30"/>  
+</random>
+
+<random>
+    <range_x min="10" max="26"/>
+    <range_y min="-3" max="0"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="-3" y="0"/>  
+</random>
+
+<random_pedestrians value="8"/>
+
+<way>
+  <nd x="-10" y="0" theta="0"/>
+  <nd x="50" y="0" theta="0"/>
+  <lane type="road" width="4." two_way="1"/>
+</way>
+

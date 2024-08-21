@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tag type="social"/>
+
+<!--Obstacles-->
+<obstacle_size x="-2" y="-2" length_x="32" length_y="0"/>
+<obstacle_size x="-2" y="30" length_x="32" length_y="0"/>
+<obstacle_size x="-2" y="-2" length_x="0" length_y="32"/>
+<obstacle_size x="30" y="-2" length_x="0" length_y="32"/>
+
+<random>
+    <range_x min="2" max="28"/>
+    <range_y min="2" max="28"/>
+    <range_v min="1.14" max="1.66"/>
+    <travel_time value="10"/>
+</random>
+
+<random_pedestrians value="24"/>
+
+<way>
+  <nd x="0" y="0" theta="0.785398163"/>
+  <nd x="30" y="30" theta="0.785398163"/>
+  <lane type="road" width="4." two_way="1"/>
+</way>
+

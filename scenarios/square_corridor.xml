@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tag type="social"/>
+
+<!--Static obstacles-->
+<hallway_x x="0" y="0" length="15.0" width="6.0"/>
+<intersection x="15" y="0" length="3.0" width="6.0"/>
+<hallway_y x="15" y="0" length="15.0" width="6.0"/>
+<intersection x="15" y="15" length="3.0" width="6.0"/>
+<hallway_x x="15" y="15" length="-15.0" width="6.0"/>
+<intersection x="0" y="15" length="3.0" width="6.0"/>
+<hallway_y x="0" y="15" length="-15.0" width="6.0"/>
+<intersection x="0" y="0" length="3.0" width="6.0"/>
+
+<!-- Pedestrians -->
+<random>
+    <range_x min="-3" max="13"/>
+    <range_y min="-1" max="0"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="20" y="0"/>   
+</random>
+<random>
+    <range_x min="12" max="20"/>
+    <range_y min="1" max="2"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="-20" y="0"/>   
+</random>
+<random>
+    <range_x min="-3" max="13"/>
+    <range_y min="14" max="15"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="20" y="0"/>   
+</random>
+<random>
+    <range_x min="12" max="20"/>
+    <range_y min="15" max="16"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="-20" y="0"/>   
+</random>
+
+<random>
+    <range_x min="-1" max="1"/>
+    <range_y min="-3" max="13"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="0" y="20"/>   
+</random>
+<random>
+    <range_x min="-1" max="1"/>
+    <range_y min="12" max="20"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="0" y="-20"/>   
+</random>
+<random>
+    <range_x min="14" max="16"/>
+    <range_y min="-3" max="13"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="0" y="20"/>   
+</random>
+<random>
+    <range_x min="14" max="16"/>
+    <range_y min="12" max="20"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="0" y="-20"/>   
+</random>
+<random_pedestrians value="16"/>
+<!-- Roadmap -->
+<way>
+  <nd x="0" y="0" theta="0"/>
+  <nd x="12" y="0" theta="0"/>
+  <nd x="15" y="3" theta="1.5708"/>
+  <nd x="15" y="12" theta="1.5708"/>
+  <nd x="12" y="15" theta="3.14"/>
+  <nd x="3" y="15" theta="3.14"/>
+  <nd x="0" y="12" theta="-1.5708"/>
+  <nd x="0" y="8" theta="-1.5708"/>
+  <nd x="0" y="4" theta="-1.5708"/>
+  <lane type="road" width="4." two_way="1"/>
+</way>
+
+

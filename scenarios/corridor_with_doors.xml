@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tag type="social"/>
+
+<!--Static obstacles-->
+<hallway_x x="0" y="0" length="60.0" width="6.0"/>
+<door_x x="10" y="0" obstruct="2.0" width="6.0"/>
+<door_x x="15" y="0" obstruct="2.5" width="6.0"/>
+<door_x x="25" y="0" obstruct="2.0" width="6.0"/>
+<door_x x="34" y="0" obstruct="3.0" width="6.0"/>
+<door_x x="40" y="0" obstruct="2.0" width="6.0"/>
+
+<!-- Pedestrians -->
+<random>
+    <range_x min="-5" max="15"/>
+    <range_y min="-1" max="1"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="50" y="0"/>   
+</random>
+<random>
+    <range_x min="45" max="65"/>
+    <range_y min="-1" max="1"/>
+    <range_v min="1.14" max="1.66"/>
+    <goal_offset x="-50" y="0"/>   
+</random>
+<random_pedestrians value="8"/>
+<!-- Roadmap -->
+<way>
+  <nd x="-10" y="0" theta="0"/>
+  <nd x="70" y="0" theta="0"/>
+  <lane type="road" width="4." two_way="1"/>
+</way>
+
+

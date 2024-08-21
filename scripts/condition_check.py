@@ -85,6 +85,11 @@ class RobotStateMonitor:
         # rospy.loginfo_throttle(1, "Condition met. Publishing reset.")
         self.reset_pub.publish(Empty())
         self.publish_goal()
+        rate = rospy.Rate(5)
+        for i in range(10):
+            rate.sleep()
+            self.publish_goal()
+
         self.start_time = time.perf_counter()
 
     def publish_goal(self):
