@@ -2,7 +2,7 @@
 
 <launch>
 
-    <arg name="map" default="corridor.xml"/>
+    <arg name="map" default="narrowing_corridor.xml"/>
 
     <!-- <rosparam param="condition_check/condition_type">close_to_point</rosparam>
     <rosparam param="condition_check/target_x">15</rosparam>
@@ -10,10 +10,10 @@
     <rosparam param="condition_check/threshold_distance">3</rosparam> -->
 
     <rosparam param="condition_check/condition_type">exceed_value</rosparam>
-    <rosparam param="condition_check/max_x">32</rosparam>
+    <rosparam param="condition_check/max_x">40</rosparam>
     <rosparam param="condition_check/max_y">100</rosparam>
 
-    <rosparam param="condition_check/timeout">30</rosparam>
+    <rosparam param="condition_check/timeout">50</rosparam>
 
     <!-- Launch a pedestrian and roadmap scenario -->
     <include file="$(find jackal_socialsim)/launch/base.launch">

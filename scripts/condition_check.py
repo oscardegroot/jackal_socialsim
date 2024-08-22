@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import time
+import math
 
+import tf
 import rospy
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Empty
@@ -43,13 +45,18 @@ class RobotStateMonitor:
         y = msg.pose.position.y
 
         should_reset = False
+        elapsed_time = time.perf_counter() - self.start_time
+
+        if self.is_robot_flipped(msg) and elapsed_time > 1:
+            self.start_time = time.perf_counter() # Prevent double resets
+            self.publish_reset()
+            return
 
         if self.first:
             self.first = False
             self.publish_reset() # Reset but without counting this one
             return
 
-        elapsed_time = time.perf_counter() - self.start_time
 
         if self.condition_type == 'close_to_point':
             # Condition 1: Check if the robot is close to a predefined point
@@ -99,6 +106,14 @@ class RobotStateMonitor:
         goal_msg.header.stamp = rospy.Time.now()
         goal_msg.header.frame_id = "map"
         self.goal_pub.publish(goal_msg)
+
+
+    def is_robot_flipped(self, pose_stamped):
+        # Define the threshold (1/8 * pi)
+        threshold = math.pi / 8
+        
+        # Check if the pitch or roll is greater than the threshold
+        return abs(pose_stamped.pose.orientation.x) > threshold or abs(pose_stamped.pose.orientation.y) > threshold
 
     def run(self):
         rospy.spin()

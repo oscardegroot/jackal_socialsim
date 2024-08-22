@@ -3,13 +3,17 @@
 
 <!--Static obstacles-->
 <hallway_x x="0" y="0" length="15.0" width="6.0"/>
-<intersection x="15" y="0" length="3.0" width="6.0"/>
+<wall_off x="15" y="0" left="0" up="0" right="1" down="1" width="6.0"/>
+<!-- <intersection x="15" y="0" length="3.0" width="6.0"/> -->
 <hallway_y x="15" y="0" length="15.0" width="6.0"/>
-<intersection x="15" y="15" length="3.0" width="6.0"/>
+<wall_off x="15" y="15" left="0" up="1" right="1" down="0" width="6.0"/>
+<!-- <intersection x="15" y="15" length="3.0" width="6.0"/> -->
 <hallway_x x="15" y="15" length="-15.0" width="6.0"/>
-<intersection x="0" y="15" length="3.0" width="6.0"/>
+<wall_off x="0" y="15" left="1" up="1" right="0" down="0" width="6.0"/>
+<!-- <intersection x="0" y="15" length="3.0" width="6.0"/> -->
 <hallway_y x="0" y="15" length="-15.0" width="6.0"/>
-<intersection x="0" y="0" length="3.0" width="6.0"/>
+<wall_off x="0" y="0" left="1" up="0" right="0" down="1" width="6.0"/>
+<!-- <intersection x="0" y="0" length="3.0" width="6.0"/> -->
 
 <!-- Pedestrians -->
 <random>

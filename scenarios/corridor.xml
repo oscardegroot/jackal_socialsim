@@ -2,26 +2,22 @@
 <tag type="social"/>
 
 <!--Static obstacles-->
-<hallway_x x="0" y="0" length="13.0" width="6.0"/>
-<door_x x="10" y="0" obstruct="2.0" width="6.0"/>
-<hallway_x x="8" y="0" length="24.0" width="4.0"/>
-<door_x x="30" y="0" obstruct="2.0" width="6.0"/>
-<hallway_x x="27" y="0" length="23.0" width="6.0"/>
+<hallway_x x="-3" y="0" length="46.0" width="6.0"/>
 
 <!-- Pedestrians -->
 <random>
-    <range_x min="3" max="13"/>
+    <range_x min="3" max="15"/>
     <range_y min="-1" max="0"/>
     <range_v min="1.14" max="1.66"/>
-    <goal_offset x="40" y="0"/>   
+    <goal_offset x="35" y="0"/>   
 </random>
 <random>
-    <range_x min="40" max="45"/>
+    <range_x min="20" max="35"/>
     <range_y min="0" max="1"/>
     <range_v min="1.14" max="1.66"/>
-    <goal_offset x="-40" y="0"/>   
+    <goal_offset x="-35" y="0"/>   
 </random>
-<random_pedestrians value="12"/>
+<random_pedestrians value="8"/>
 <!-- Roadmap -->
 <way>
   <nd x="-10" y="0" theta="0"/>
