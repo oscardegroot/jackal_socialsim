@@ -7,7 +7,7 @@
     <arg name="pedestrian_scenario" default="open_space/24.xml"/>
 
     <node pkg="jackal_socialsim" type="condition_check.py" name="condition_check" output="screen" required="true"/>
-    <node pkg="jackal_socialsim" type="data_recorder.py" name="data_recorder" output="screen" required="true"/>
+    <!-- <node pkg="jackal_socialsim" type="data_recorder.py" name="data_recorder" output="screen" required="true"/> -->
 
     <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
         <arg name="scenario_package_name" value="jackal_socialsim"/>

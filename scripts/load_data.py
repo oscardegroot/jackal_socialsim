@@ -27,11 +27,12 @@ def split_data(data, remove_first=True):
     datasets = []
     
     # Initialize the starting index
-    start_index = 0
+    start_index = 1
     
     # Split the data based on the reset values
-    for reset in reset_values:
+    for reset in reset_values[1:]:
         end_index = reset
+        # print(f"Cutting data from {start_index} to {end_index}")
         subset = {key: value[start_index:end_index] for key, value in data.items() if key != "reset" and is_continuous_data(key)}
         datasets.append(subset)
         start_index = end_index
@@ -39,13 +40,11 @@ def split_data(data, remove_first=True):
     # Insert metrics for each simulation (one entry per simulation)
     for key, value in data.items():
         if "metric" in key:
-            for v in range(len(value)):
-                datasets[v][key] = value[v]
+            for v in range(1, len(value)): # Skip the first
+                datasets[v-1][key] = value[v]
 
     if remove_first:
         datasets.pop(0)
-
-    # for dataset in datasets
     
     return datasets
 

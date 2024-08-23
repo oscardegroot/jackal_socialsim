@@ -13,6 +13,8 @@ from std_msgs.msg import String, Empty, Float64
 import tf.transformations
 from geometry_msgs.msg import Quaternion
 
+import threading
+
 def quaternion_to_yaw(quaternion):
     # Convert the quaternion to a list [x, y, z, w]
     q = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
@@ -78,14 +80,15 @@ class RecordedData:
 class DataRecorderNode:
     def __init__(self):
         # Initialize node
-        rospy.init_node('data_recorder_node')
+        # rospy.init_node('data_recorder_node')
 
         # Get the scenario name from the command line argument
         self.scenario = rospy.get_param('scenario', 'none')
         self.experiment = rospy.get_param('experiment', 'none')
         self._data_folder = rospy.get_param('data_folder', '')
 
-        self.save_interval_s = rospy.get_param('~save_interval_ms', 20) / 1000.
+        self.save_interval_s = 50. / 1000. # Every 50 ms
+        self.num_experiments = rospy.get_param('/condition_check/num_experiments', 1)
 
         # Initialize storage for the topics
         self._data = RecordedData(self.save_interval_s)
@@ -123,13 +126,13 @@ class DataRecorderNode:
         rospy.Subscriber('hey_robot/weights', WeightArray, self.weights_callback)
 
         # Timer for saving data
+        self._save_lock = threading.Lock()
         self.save_timer = rospy.Timer(rospy.Duration(self.save_interval_s), self.add_data)
 
     def reset_callback(self, msg):
         self._reset = True
     
     def timeout_callback(self, msg):
-        print("timeout received")
         self._timeout_received = True
 
     def robot_state_callback(self, msg):
@@ -147,80 +150,78 @@ class DataRecorderNode:
         self._weights_msg = msg
 
     def add_data(self, event):
-        self._data.new_iteration()
+        with self._save_lock:
 
-        if self._state_msg and self._obs_msg:
-            self._data.add("pos", [self._state_msg.pose.position.x, self._state_msg.pose.position.y])
-            self._data.add("v", self._state_msg.pose.position.z)
-            self._data.add("orientation", self._state_msg.pose.orientation.z)
+            if self._state_msg and self._obs_msg:
+                self._data.new_iteration()
 
-            for j, obs in enumerate(self._obs_msg.obstacles):
-                idx = obs.id
-                if not self._data.has_data(f"obstacle_{idx}_pos"):
-                    self._data.register(f"obstacle_{idx}_pos")
-                    self._data.register(f"obstacle_{idx}_orientation")
-                    if idx >= self._num_obstacles:
-                        self._num_obstacles = idx + 1
+                self._data.add("pos", [self._state_msg.pose.position.x, self._state_msg.pose.position.y])
+                self._data.add("v", self._state_msg.pose.position.z)
+                self._data.add("orientation", self._state_msg.pose.orientation.z)
 
-            obstacles_received = [False] * self._num_obstacles
-            for j, obs in enumerate(self._obs_msg.obstacles):
-                idx = obs.id
-                # prediction = obs.gaussians[0].mean.poses[0]
-                self._data.add(f"obstacle_{idx}_pos", [obs.pose.position.x, obs.pose.position.y])
-                self._data.add(f"obstacle_{idx}_orientation", quaternion_to_yaw(obs.pose.orientation))
-                obstacles_received[idx] = True
+                for j, obs in enumerate(self._obs_msg.obstacles):
+                    idx = obs.id
+                    if not self._data.has_data(f"obstacle_{idx}_pos"):
+                        self._data.register(f"obstacle_{idx}_pos")
+                        self._data.register(f"obstacle_{idx}_orientation")
+                        if idx >= self._num_obstacles:
+                            self._num_obstacles = idx + 1
 
-            for idx, o in enumerate(obstacles_received):
-                if not o:
-                    self._data.add(f"obstacle_{idx}_pos", [-1e9, -1e9])
-                    self._data.add(f"obstacle_{idx}_orientation", -1e9)
+                obstacles_received = [False] * self._num_obstacles
+                for j, obs in enumerate(self._obs_msg.obstacles):
+                    idx = obs.id
+                    # prediction = obs.gaussians[0].mean.poses[0]
+                    self._data.add(f"obstacle_{idx}_pos", [obs.pose.position.x, obs.pose.position.y])
+                    self._data.add(f"obstacle_{idx}_orientation", quaternion_to_yaw(obs.pose.orientation))
+                    obstacles_received[idx] = True
 
-        if self._weights_msg:
-            weights = dict()
-            for weight in self._weights_msg.weights:
-                weights[weight.name] = weight.value
-            weights["iteration"] = self._data.get_iteration()
+                for idx, o in enumerate(obstacles_received):
+                    if not o:
+                        self._data.add(f"obstacle_{idx}_pos", [-1e9, -1e9])
+                        self._data.add(f"obstacle_{idx}_orientation", -1e9)
 
-            self._weights_msg = None # Only save when received
+            if self._weights_msg:
+                weights = dict()
+                for weight in self._weights_msg.weights:
+                    weights[weight.name] = weight.value
+                weights["iteration"] = self._data.get_iteration()
 
-            self._data.add("weights", weights)
+                self._weights_msg = None # Only save when received
 
-        # if self._data.length() % 100 == 0:
-        if self._reset:
-            self._reset = False
+                self._data.add("weights", weights)
 
-            self._data.add_metric("timeout", copy.deepcopy(int(self._timeout_received)))
-            self._timeout_received = False
+            if self._reset:
+                self._reset = False
 
-            # Add metrics
-            self._data.add_metric("collisions", copy.deepcopy(self._collisions))
-            self._collisions = 0
+                self._data.add_metric("timeout", copy.deepcopy(int(self._timeout_received)))
+                self._timeout_received = False
 
-            self._data.end_experiment()
-            self.save_data()
+                # Add metrics
+                self._data.add_metric("collisions", copy.deepcopy(self._collisions))
+                self._collisions = 0
+
+                self._data.end_experiment()
 
     def save_data(self):
-        if self._data_folder == '':
-            base_data_folder = pathlib.Path(__file__).parent.resolve() / "../data" 
-        else:
-            base_data_folder = self._data_folder
-        data_path = f"{base_data_folder}/{self.scenario}"
+        with self._save_lock:
+            if self._data_folder == '':
+                base_data_folder = pathlib.Path(__file__).parent.resolve() / "../data" 
+            else:
+                base_data_folder = self._data_folder
+            data_path = f"{base_data_folder}/{self.scenario}"
 
-        os.makedirs(f'{data_path}', exist_ok=True)
-        filepath = f'{data_path}/{self.experiment}.json'
+            os.makedirs(f'{data_path}', exist_ok=True)
+            filepath = f'{data_path}/{self.experiment}.json'
 
-        # Save the data to a JSON file
-        with open(filepath, 'w') as f:
-            json.dump(self._data.get_data(), f, indent=4)
+            # Save the data to a JSON file
+            with open(filepath, 'w') as f:
+                json.dump(self._data.get_data(), f, indent=4)
 
-        rospy.loginfo(f'Data saved to {filepath}')
+            rospy.loginfo(f'Data saved to {filepath}')
 
-    def run(self):
-        rospy.spin()
-
-if __name__ == '__main__':
-    try:
-        node = DataRecorderNode()
-        node.run()
-    except rospy.ROSInterruptException:
-        pass
+# if __name__ == '__main__':
+#     try:
+#         node = DataRecorderNode()
+#         node.run()
+#     except rospy.ROSInterruptException:
+#         pass

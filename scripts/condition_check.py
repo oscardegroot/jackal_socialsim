@@ -7,10 +7,18 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Empty
 
+import os, sys
+import pathlib
+path = pathlib.Path(__file__).parent.resolve()
+sys.path.append(os.path.join(path))
+
+from data_recorder import DataRecorderNode
+
 class RobotStateMonitor:
-    def __init__(self):
+    def __init__(self, data_recorder):
         # Initialize the ROS node
-        rospy.init_node('condition_check')
+
+        self.data_recorder = data_recorder
 
         # Get the parameters for the conditions
         self.condition_type = rospy.get_param('~condition_type', 'close_to_point')  # 'close_to_point' or 'exceed_value'
@@ -30,7 +38,6 @@ class RobotStateMonitor:
         # Publisher for the reset topic
         self.reset_pub = rospy.Publisher('/jackal_socialsim/reset', Empty, queue_size=10)
         self.goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=5)
-        self.timeout_pub = rospy.Publisher('/condition_check/timeout', Empty, queue_size=5)
 
         # Subscriber for the robot_state topic
         self.state_sub = rospy.Subscriber('robot_state', PoseStamped, self.state_callback)
@@ -82,7 +89,8 @@ class RobotStateMonitor:
 
             self.publish_reset()
             if self.completions == self.num_experiments:
-                rospy.sleep(5.)
+                data_recorder.save_data()
+                # rospy.sleep(5.)
                 print(f"{self.num_experiments} experiments completed!")
                 rospy.signal_shutdown("Experiments completed")
             else:
@@ -96,14 +104,15 @@ class RobotStateMonitor:
         self.reset_pub.publish(Empty())
         self.publish_goal()
         rate = rospy.Rate(5)
-        for i in range(10):
+        for i in range(5):
             rate.sleep()
             self.publish_goal()
 
         self.start_time = time.perf_counter()
 
     def publish_timeout(self):
-        self.timeout_pub.publish(Empty())
+        self.data_recorder.timeout_callback(Empty())
+        # self.timeout_pub.publish(Empty())
 
     def publish_goal(self):
         goal_msg = PoseStamped()
@@ -121,9 +130,18 @@ class RobotStateMonitor:
         # Check if the pitch or roll is greater than the threshold
         return abs(pose_stamped.pose.orientation.x) > threshold or abs(pose_stamped.pose.orientation.y) > threshold
 
-    def run(self):
+if __name__ == '__main__':
+
+    try:
+        rospy.init_node('condition_check')
+
+        data_recorder = DataRecorderNode()
+        # data_recorder.run()
+    
+        monitor = RobotStateMonitor(data_recorder)
+        # monitor.run()
+
         rospy.spin()
 
-if __name__ == '__main__':
-    monitor = RobotStateMonitor()
-    monitor.run()
+    except rospy.ROSInterruptException:
+        pass

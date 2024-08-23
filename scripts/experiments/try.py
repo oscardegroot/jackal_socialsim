@@ -1,18 +1,39 @@
 import sys, os
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append("..")
 from load_data import get_all_experiments_for_scenario
 from table import create_table, load_default_settings
+from plot import plot_agent_trajectories, plot_agent_trajectories_for_all_experiments
 
 
 if __name__ == '__main__':
     choice = sys.argv[1]
 
+    scenario = sys.argv[2]
+    base_folder="/workspace/src/LLM-Navigation/"
+
+    if choice.lower() == "trajectories":
+        experiments = get_all_experiments_for_scenario(base_folder, scenario, filter=["none"])
+        for experiment in experiments:
+            plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, xlim=[0, 20], ylim=[-5, 12.5])
+
+    if choice.lower() == "follow_trajectories":
+        fig = plt.figure()
+        ax = plt.gca()
+
+        experiments = get_all_experiments_for_scenario(base_folder, "follow_scenario", filter=["none"])
+        for idx, experiment in enumerate(experiments):
+            plot_agent_trajectories(base_folder, scenario, experiment, 
+                                    color_idx=0, external_ax=ax, 
+                                    xlim=[0, 20], ylim=[-5, 12.5],
+                                    marker=['*', 's'][idx])
+
     if choice.lower() == "table":
 
         def caption(num_experiments, num_scenarios):
-            return f"\\caption{{Comparison table.}}\\resizebox{{\\textwidth}}{{!}}{{%"
+            return f"\\caption{{{scenario}.}}\\resizebox{{\\textwidth}}{{!}}{{%"
 
         def add_table_data(table):
             table.add_data("Method", lambda metrics, highlight: table.table_settings["clean_method_name"](metrics["experiment"]), align="l")
@@ -29,24 +50,17 @@ if __name__ == '__main__':
             # table.add_data("Mean Clearance. [m]",
                         #    lambda metrics, highlight: f'{highlight(np.mean(metrics["obstacle_clearance"]["mean"]), 2)} ({np.std(metrics["obstacle_clearance"]["mean"]):.2f})')
 
+            table.add_data("Timeouts",
+                           lambda metrics, highlight: f'{highlight(np.sum([1 if m > 0 else 0 for m in metrics["metric_timeout"]]), 0)}')
+
             table.add_data("Avg. Velocity [m/s]",
-                           lambda metrics, highlight: f'{highlight(np.mean(metrics["velocity"]["mean"]), 2)}')
+                           lambda metrics, highlight: f'{np.mean(metrics["velocity"]["mean"]):.2f}')
             # table.add_data("Runtime (Max) [ms]",
                         #    lambda metrics, highlight: f'{highlight(metrics["runtime"]["mean"] * 1000., 0)} ({metrics["runtime"]["max"] * 1000.:.0f})')
 
-        scenario = sys.argv[2]
-        base_folder="/workspace/src/LLM-Navigation/"
         experiments = get_all_experiments_for_scenario(base_folder, scenario, filter=["none"])
         print(experiments)
-        # experiments = [
-        #     "Follow the path.",
-        #     "Follow the path. You are driving in a factory.",
-        #     "Follow the path. The robot must navigate through a hospital.",
-        #     "Follow the path. Drive slowly.",
-        #     "Follow the path. Drive fast.",
-        #     "Follow the path and try to keep a distance of 1m from pedestrians."
-        # ]#
-        
+
         settings = load_default_settings([scenario])
         settings["caption"] = caption
         settings["add_table_data"] = add_table_data

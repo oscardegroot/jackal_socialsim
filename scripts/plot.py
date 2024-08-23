@@ -28,7 +28,7 @@ def new_plot(ax=None):
     else:
         return plt.gcf(), ax
 
-def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True, show_markers=True, **kwargs):
+def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True, show_markers=True, marker='.',**kwargs):
     
     fig, ax = new_plot(ax)
 
@@ -41,7 +41,7 @@ def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True,
         if 'label' not in temp_kwargs.keys():
             temp_kwargs['label'] = '_nolegend_'
 
-        ax.scatter(trajectory[:, 0], trajectory[:, 1], alpha=0.3, s=50, marker='.', **temp_kwargs)
+        ax.scatter(trajectory[:, 0], trajectory[:, 1], alpha=0.3, s=150, marker=marker, **temp_kwargs)
 
     if show_trace:
         # Plot continuous sequences only
@@ -60,21 +60,57 @@ def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True,
 
     return fig, ax
 
+def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, color_idx=0, external_ax=None, xlim=None, ylim=None, **kwargs):
+    
+    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
 
+    # All together
+    t_final = -1
+    t_start = 20
+    if external_ax is None:
+        fig = plt.figure()
+        ax = plt.gca()
+    else:
+        ax = external_ax
+    
+    for e_idx, e in enumerate(experiment_data):
+        fig, ax = plot_trajectory(e["pos"], ax=ax, t_start=t_start, t_final=t_final, color=f"C{color_idx}", **kwargs)
+        for i in range(metrics["num_obstacles"][0]):
+            fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, t_final=t_final, ax=ax, color="C2", show_markers=False)
+        # plt.ylim([-4, 4])
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    save_figure_as(fig, base_folder + f"figures/{scenario}/{experiment}/", f"trajectories_all", save_pdf=True)
+
+def plot_agent_trajectories(base_folder, scenario, experiment, color_idx=0, external_ax=None, xlim=None, ylim=None, **kwargs):
+
+    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
+
+    # NOTE Figure per experiment
+    t_final = -1
+    t_start = 20
+    for e_idx, e in enumerate(experiment_data):
+        fig, ax = plot_trajectory(e["pos"], t_start=t_start, t_final=t_final, color="C0")
+        for i in range(metrics["num_obstacles"][0]):
+            fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, t_final=t_final, ax=ax, color="C2", show_markers=False)
+        # plt.ylim([-4, 4])
+        if xlim is not None:
+            ax.set_xlim(xlim)
+        if ylim is not None:
+            ax.set_ylim(ylim)
+        save_figure_as(fig, base_folder + f"figures/{scenario}/{experiment}/", f"trajectories_{e_idx}", save_pdf=False)
+    
 if __name__ == "__main__":
     # Example usage
     base_folder = sys.argv[1]
     scenario = sys.argv[2]
     experiment = sys.argv[3]
+    plot_agent_trajectories(base_folder, scenario, experiment)
 
-    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
 
-    for e_idx, e in enumerate(experiment_data):
-        fig, ax = plot_trajectory(e["pos"], t_final=-80)
-        for i in range(metrics["num_obstacles"][0]):
-            fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_final=-80, ax=ax, color="C2", show_markers=False)
-        plt.ylim([-4, 4])
-        save_figure_as(fig, base_folder + f"figures/{scenario}/{experiment}/", f"trajectories_{e_idx}", save_pdf=False)
+    
     
 
 
