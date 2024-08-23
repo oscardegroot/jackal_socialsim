@@ -30,6 +30,7 @@ class RobotStateMonitor:
         # Publisher for the reset topic
         self.reset_pub = rospy.Publisher('/jackal_socialsim/reset', Empty, queue_size=10)
         self.goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=5)
+        self.timeout_pub = rospy.Publisher('/condition_check/timeout', Empty, queue_size=5)
 
         # Subscriber for the robot_state topic
         self.state_sub = rospy.Subscriber('robot_state', PoseStamped, self.state_callback)
@@ -74,12 +75,14 @@ class RobotStateMonitor:
                 print("Experiment: Timeout")
                 should_reset = True
                 self.timeouts += 1
+                self.publish_timeout()
 
         if should_reset and elapsed_time > 1.:
             self.start_time = time.perf_counter() # Prevent double resets
 
             self.publish_reset()
             if self.completions == self.num_experiments:
+                rospy.sleep(5.)
                 print(f"{self.num_experiments} experiments completed!")
                 rospy.signal_shutdown("Experiments completed")
             else:
@@ -98,6 +101,9 @@ class RobotStateMonitor:
             self.publish_goal()
 
         self.start_time = time.perf_counter()
+
+    def publish_timeout(self):
+        self.timeout_pub.publish(Empty())
 
     def publish_goal(self):
         goal_msg = PoseStamped()

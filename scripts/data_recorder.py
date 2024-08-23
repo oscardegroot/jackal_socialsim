@@ -104,6 +104,9 @@ class DataRecorderNode:
         self._collisions = 0
         self._data.register_metric("collisions")
 
+        self._timeout_received = False
+        self._data.register_metric("timeout")
+
         self._obs_msg = None # Note: registered at first occurence
         self._num_obstacles = 0
 
@@ -112,6 +115,7 @@ class DataRecorderNode:
 
         # Subscribers
         rospy.Subscriber('/jackal_socialsim/reset', Empty, self.reset_callback) # End of experiment
+        rospy.Subscriber('/condition_check/timeout', Empty, self.timeout_callback) # End of experiment
 
         rospy.Subscriber('robot_state', PoseStamped, self.robot_state_callback)
         rospy.Subscriber('pedestrian_simulator/collision_detected', Float64, self.collision_callback)
@@ -123,6 +127,10 @@ class DataRecorderNode:
 
     def reset_callback(self, msg):
         self._reset = True
+    
+    def timeout_callback(self, msg):
+        print("timeout received")
+        self._timeout_received = True
 
     def robot_state_callback(self, msg):
         self._state_msg = msg
@@ -162,7 +170,7 @@ class DataRecorderNode:
                 self._data.add(f"obstacle_{idx}_orientation", quaternion_to_yaw(obs.pose.orientation))
                 obstacles_received[idx] = True
 
-            for o in obstacles_received:
+            for idx, o in enumerate(obstacles_received):
                 if not o:
                     self._data.add(f"obstacle_{idx}_pos", [-1e9, -1e9])
                     self._data.add(f"obstacle_{idx}_orientation", -1e9)
@@ -180,6 +188,9 @@ class DataRecorderNode:
         # if self._data.length() % 100 == 0:
         if self._reset:
             self._reset = False
+
+            self._data.add_metric("timeout", copy.deepcopy(int(self._timeout_received)))
+            self._timeout_received = False
 
             # Add metrics
             self._data.add_metric("collisions", copy.deepcopy(self._collisions))

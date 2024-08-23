@@ -13,6 +13,7 @@ def load_data(base_folder, scenario, experiment):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file {file_path} does not exist.")
     
+    print(f"Loading {file_path}")
     with open(file_path, 'r') as file:
         data = json.load(file)
     
