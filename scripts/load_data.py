@@ -31,7 +31,7 @@ def split_data(data, remove_first=True):
     
     # Split the data based on the reset values
     for reset in reset_values[1:]:
-        end_index = reset
+        end_index = int(reset)
         # print(f"Cutting data from {start_index} to {end_index}")
         subset = {key: value[start_index:end_index] for key, value in data.items() if key != "reset" and is_continuous_data(key)}
         datasets.append(subset)

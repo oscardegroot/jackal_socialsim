@@ -17,7 +17,17 @@ if __name__ == '__main__':
     if choice.lower() == "trajectories":
         experiments = get_all_experiments_for_scenario(base_folder, scenario, filter=["none"])
         for experiment in experiments:
-            plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, xlim=[0, 20], ylim=[-5, 12.5])
+            t_final = -1
+            if "path" in experiment:
+                t_final = -230
+            print(t_final)
+            plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, t_final=t_final, xlim=[0, 20], ylim=[-5, 12.5])
+
+    if choice.lower() == "single_trajectory":
+        experiments = get_all_experiments_for_scenario(base_folder, scenario, filter=["none"])
+        for experiment in experiments:
+            plot_agent_trajectories(base_folder, scenario, experiment, xlim=[-2, 38.], ylim=[-20., 15.], translate_to_zero=True)
+
 
     if choice.lower() == "follow_trajectories":
         fig = plt.figure()
