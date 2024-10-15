@@ -1,23 +1,21 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(jackal_socialsim)
 
-find_package(catkin REQUIRED COMPONENTS
+# Find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
 
+# Install Python scripts
+install(PROGRAMS
+  scripts/ros2_condition_check.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
-catkin_package(
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
   
-)
-
-catkin_python_setup()
-
-
-catkin_install_python(PROGRAMS
-  scripts/condition_check.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
+install(DIRECTORY scenarios
+  DESTINATION share/${PROJECT_NAME})
+# Export package information
+ament_export_dependencies()
+ament_package()

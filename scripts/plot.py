@@ -143,14 +143,15 @@ def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True,
 
     return fig, ax
 
-def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, color_idx=0, external_ax=None, xlim=None, ylim=None, **kwargs):
+def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, color_idx=0,
+                                                 external_ax=None, xlim=None, ylim=None, **kwargs):
     set_font(latex=True, fontsize=22)
     name = experiment.split(" ")[-1].split(".")[0].lower()
     metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
 
     # All together
     # t_final = -1
-    t_start = 20
+    t_start = 100
     if external_ax is None:
         fig = plt.figure()
         ax = plt.gca()
@@ -172,7 +173,7 @@ def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experimen
             fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, ax=ax, color=ped_color, show_trace=False, **kwargs)
         # plt.ylim([-4, 4])
 
-    plot_environment(ax)
+    # plot_environment(ax)
 
     if xlim is not None:
         ax.set_xlim(xlim)

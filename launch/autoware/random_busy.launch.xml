@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="pedestrian_scenario" default="autoware/random_area_busy.xml"/>
+
+    <!-- Launch a pedestrian and roadmap scenario -->
+    <include file="$(find-pkg-share jackal_socialsim)/launch/autoware/autoware_base.launch.xml">
+        <arg name="pedestrian_scenario" value="$(var pedestrian_scenario)"/>
+    </include>
+
+
+</launch>  
