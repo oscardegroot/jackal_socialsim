@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tag type="social"/>
+<tag type="velocity" value="1.4"/>
+<random_square>
+	<p1 x="94079.0859375" y="61842.01953125"/>
+	<p2 x="94072.59375" y="61857.6953125"/>
+	<p3 x="94108.375" y="61873.96484375"/>
+	<p4 x="94115.8671875" y="61856.96484375"/>
+</random_square>
+<random_pedestrians value="4"/>

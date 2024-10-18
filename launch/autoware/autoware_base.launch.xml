@@ -6,11 +6,12 @@
     <arg name="pedestrian_scenario" default="none"/>
 
     <arg name="experiment" default="test"/>
+    <arg name="num_experiments" default="10"/>
 
-    <include file="$(find-pkg-share mpc_planner_autoware)/launch/ros2_autoware.launch">
+    <arg name="with_planner" default="false"/>
+
+    <include file="$(find-pkg-share mpc_planner_autoware)/launch/ros2_autoware.launch" if="$(var with_planner)">
         <arg name="standalone_mode" value="true"/>
-        <arg name="overwrite_file_name" value="true"/>
-        <arg name="recorded_file_name" value="$(var pedestrian_scenario)"/>
     </include>
 
     <include file="$(find-pkg-share mpc_planner_autoware)/launch/path_and_pedestrians.launch">
@@ -21,7 +22,7 @@
     <node pkg="jackal_socialsim" exec="ros2_condition_check.py" name="ros2_condition_check" output="screen">
         <remap from="~/input/state" to="/localization/kinematic_state"/>
         <remap from="~/input/reset" to="/planning/mpc_planner_plugin/trigger_goal"/>
-        <param name="num_experiments" value="5"/>
+        <param name="num_experiments" value="$(var num_experiments)"/>
         <param name="timeout" value="40.0"/>
         <param name="scenario" value="$(var pedestrian_scenario)"/>
         <param name="experiment" value="$(var experiment)"/>

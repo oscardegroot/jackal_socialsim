@@ -13,6 +13,9 @@ def add_mean_min_max_std(metrics, experiment_data, key, metric_name):
     metrics[metric_name]["max"] = []
     metrics[metric_name]["std"] = []
 
+    if len(experiment_data[0][key]) == 0:
+        return
+
     for e in experiment_data:
         metrics[metric_name]["mean"].append(np.mean(e[key]))
         # print(e[key])

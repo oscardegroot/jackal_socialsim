@@ -118,6 +118,7 @@ class RobotStateMonitor(Node):
 
     def publish_reset(self):
         # Publish an empty message to reset the simulation
+        self.get_logger().info(f"Published Reset Message")
         self.reset_pub.publish(Empty())
         self.publish_goal()
         # timer = self.create_rate(5)

@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from metrics import compute_metrics
-from util.utils import translate_positions_to_zero
+from util.utils import translate_positions_to_zero, detect_start_times
 
 fig_width = 7.02625 # /textwidth in latex in inches
 
-
+vehicle_color = [255/ 256., 111./256., 97./256.]
+ped_color = [13/256., 102./256., 100./256.]
 
 def set_font(latex=True, fontsize=20):
     plt.rcdefaults()
@@ -46,7 +47,7 @@ def save_figure_as(fig, figure_folder, figure_name, ratio=1.0, verbose=True, sav
         fig.savefig(f'{figure_folder}{figure_name}.png', bbox_inches='tight', dpi=dpi, **kwargs)
 
     if verbose:
-        print(f'Saved figure as: {figure_folder}{figure_name}.pdf')
+        print(f'Saved figure as: {figure_folder}{figure_name}.png')
 
 def new_plot(ax=None):
 
@@ -55,13 +56,6 @@ def new_plot(ax=None):
         return fig, plt.gca()
     else:
         return plt.gcf(), ax
-
-
-# def set_fontsize(fontsize):
-#     matplotlib.rc('font', size=fontsize)
-#     matplotlib.rc('axes', titlesize=fontsize)
-#     # matplotlib.rcParams.update({'font.size': fontsize})
-
 
 def plot_environment(ax):
 
@@ -144,14 +138,19 @@ def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True,
     return fig, ax
 
 def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, color_idx=0,
-                                                 external_ax=None, xlim=None, ylim=None, **kwargs):
+                                                 external_ax=None, xlim=None, ylim=None, t_final=-18, translate_to_zero=False, **kwargs):
     set_font(latex=True, fontsize=22)
     name = experiment.split(" ")[-1].split(".")[0].lower()
     metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
 
+    start_times = detect_start_times(experiment_data, metrics["num_obstacles"][0])
+    t_start = start_times[0]
+    if translate_to_zero:
+        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], 
+                                    t_start=t_start, t_final=t_final,rotate = np.pi/2., all_experiments_the_same=True)
+
     # All together
     # t_final = -1
-    t_start = 100
     if external_ax is None:
         fig = plt.figure()
         ax = plt.gca()
@@ -163,14 +162,12 @@ def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experimen
     # vehicle_color = f"C{color_idx}"
     # ped_color = "C2"
 
-    vehicle_color = [255/ 256., 111./256., 97./256.]
-    ped_color = [13/256., 102./256., 100./256.]
 
     for e_idx, e in enumerate(experiment_data):
         # fig, ax = plot_trajectory(e["pos"], ax=ax, t_start=t_start, t_final=t_final, color=f"C{color_idx}", **kwargs)
-        fig, ax = plot_trajectory(e["pos"], ax=ax, t_start=t_start, color=vehicle_color, show_trace=False, **kwargs)
-        for i in range(metrics["num_obstacles"][0]):
-            fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, ax=ax, color=ped_color, show_trace=False, **kwargs)
+        fig, ax = plot_trajectory(e["pos"], ax=ax, t_start=t_start, t_final=t_final, color=vehicle_color, show_trace=False, **kwargs)
+        # for i in range(metrics["num_obstacles"][0]):
+            # fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, ax=ax, color=ped_color, show_trace=False, **kwargs)
         # plt.ylim([-4, 4])
 
     # plot_environment(ax)
@@ -183,20 +180,25 @@ def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experimen
 
     save_figure_as(fig, base_folder + f"figures/{scenario}/{experiment}/", f"trajectories_{name}", save_pdf=True)
 
-def plot_agent_trajectories(base_folder, scenario, experiment, color_idx=0, external_ax=None, xlim=None, ylim=None, translate_to_zero=False, **kwargs):
+def plot_agent_trajectories(base_folder, scenario, experiment, 
+                            color_idx=0, external_ax=None, xlim=None, ylim=None, 
+                            translate_to_zero=False, t_start=100, t_final=-18, **kwargs):
 
     metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
 
+    start_times = detect_start_times(experiment_data, metrics["num_obstacles"][0])
+
     if translate_to_zero:
-        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], rotate =- np.pi/2.)
+        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], rotate = np.pi/2.)
 
     # NOTE Figure per experiment
-    t_final = -1
-    t_start = 20
+    t_final = t_final
+    # t_start = t_start
     for e_idx, e in enumerate(experiment_data):
-        fig, ax = plot_trajectory(e["pos"], t_start=t_start, t_final=t_final, color="C0", marker_size=600)
+        t_start = start_times[e_idx]
+        fig, ax = plot_trajectory(e["pos"], t_start=t_start, t_final=t_final, color=vehicle_color, show_trace=False, marker_size=600)
         for i in range(metrics["num_obstacles"][0]):
-            fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, t_final=t_final, ax=ax, color="C2", show_markers=True)
+            fig, ax = plot_trajectory(e[f"obstacle_{i}_pos"], t_start=t_start, t_final=t_final, ax=ax, color=ped_color, show_trace=False, show_markers=True)
         # plt.ylim([-4, 4])
         if xlim is not None:
             ax.set_xlim(xlim)

@@ -105,6 +105,7 @@ class DataRecorderNode():
 
         self._reset = False
         self._state_msg = None
+        self._twist_msg = None
         self._data.register("pos")
         self._data.register("v")
         self._data.register("orientation")
@@ -147,10 +148,13 @@ class DataRecorderNode():
 
     def robot_state_odom_callback(self, msg):
         self._state_msg = msg.pose.pose
+        self._twist_msg = msg.twist.twist
 
     def collision_callback(self, msg):
-        if msg.data > 0. and self._collision_msg is not None and self._collision_msg.data <= 0.:
+        margin = 0.0 # Margin is in collision checker now
+        if msg.data > margin and self._collision_msg is not None and self._collision_msg.data <= margin:
             self._collisions += 1
+            self._node.get_logger().info(f"Collision detected")
         self._collision_msg = msg
 
     def obstacle_callback(self, msg):
@@ -166,7 +170,7 @@ class DataRecorderNode():
                 self._data.new_iteration()
 
                 self._data.add("pos", [self._state_msg.position.x, self._state_msg.position.y])
-                self._data.add("v", self._state_msg.position.z)
+                self._data.add("v", self._twist_msg.linear.x)
                 self._data.add("orientation", self._state_msg.orientation.z)
 
                 for j, obs in enumerate(self._obs_msg.obstacles):
