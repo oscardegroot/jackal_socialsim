@@ -189,7 +189,7 @@ def plot_agent_trajectories(base_folder, scenario, experiment,
     start_times = detect_start_times(experiment_data, metrics["num_obstacles"][0])
 
     if translate_to_zero:
-        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], rotate = np.pi/2.)
+        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], rotate = -np.pi/2.)
 
     # NOTE Figure per experiment
     t_final = t_final

@@ -14,7 +14,7 @@ def one_figure(experiments, base_folder, scenario):
                                                             xlim=[-30, 2], ylim=[-5, 12])
 
 def figure_per_experiment(experiments, base_folder, scenario):
-    experiments = get_all_experiments_for_scenario(base_folder, scenario)#, filter=["none"])
+    # experiments = get_all_experiments_for_scenario(base_folder, scenario)#, filter=["none"])
     for experiment in experiments:
         plot_agent_trajectories(base_folder, scenario, experiment, translate_to_zero=True, xlim=[-2, 30], ylim=[-20, 10])
 
