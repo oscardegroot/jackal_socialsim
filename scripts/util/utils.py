@@ -55,6 +55,7 @@ def detect_start_times(experiment_data, num_obstacles):
     for e_idx, e in enumerate(experiment_data):
         if num_obstacles == 0:
             start_times.append(0)
+            continue
 
         obs_pos = experiment_data[e_idx][f"obstacle_{0}_pos"]
         prev_pos = obs_pos[0]

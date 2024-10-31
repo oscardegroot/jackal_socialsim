@@ -11,12 +11,12 @@ from plot import plot_agent_trajectories, plot_agent_trajectories_for_all_experi
 def one_figure(experiments, base_folder, scenario):
     for experiment in experiments:
                 plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, translate_to_zero=True,
-                                                            xlim=[-30, 2], ylim=[-5, 12])
+                                                            xlim=[-50, 2], ylim=[-5, 12])
 
 def figure_per_experiment(experiments, base_folder, scenario):
     # experiments = get_all_experiments_for_scenario(base_folder, scenario)#, filter=["none"])
     for experiment in experiments:
-        plot_agent_trajectories(base_folder, scenario, experiment, translate_to_zero=True, xlim=[-2, 30], ylim=[-20, 10])
+        plot_agent_trajectories(base_folder, scenario, experiment, translate_to_zero=True, xlim=[-2, 50], ylim=[-20, 10])
 
 
 def table(experiments, base_folder, scenario):

@@ -121,6 +121,8 @@ class DataRecorderNode():
         self._num_obstacles = 0
 
         self._weights_msg = None
+
+        self._enable_record = False
         # self._data.register("weights")
 
         # Subscribers
@@ -139,7 +141,8 @@ class DataRecorderNode():
 
     def reset_callback(self, msg):
         self._reset = True
-    
+        self._node.get_logger().info(f"Received reset!")
+
     def timeout_callback(self, msg):
         self._timeout_received = True
 
@@ -149,6 +152,12 @@ class DataRecorderNode():
     def robot_state_odom_callback(self, msg):
         self._state_msg = msg.pose.pose
         self._twist_msg = msg.twist.twist
+
+    def enable_record(self):
+        self._enable_record = True
+
+    def disable_record(self):
+        self._enable_record = False
 
     def collision_callback(self, msg):
         margin = 0.0 # Margin is in collision checker now
@@ -164,7 +173,11 @@ class DataRecorderNode():
         self._weights_msg = msg
 
     def add_data(self):
+        if not self._enable_record:
+            return
+
         with self._save_lock:
+            self._node.get_logger().info("RECORDING")
 
             if self._state_msg and self._obs_msg:
                 self._data.new_iteration()

@@ -48,7 +48,7 @@ def split_data(data, remove_first=True):
     
     return datasets
 
-def load_experiment_data(base_folder, scenario, experiment, verbose=False):
+def load_experiment_data(base_folder, scenario, experiment, remove_first=False, verbose=False):
     if verbose:
         print(f"Loading data for {scenario} Experiment: {experiment}")
 
@@ -56,8 +56,8 @@ def load_experiment_data(base_folder, scenario, experiment, verbose=False):
     data = load_data(base_folder, scenario, experiment)
 
     # Split the data into datasets
-    experiments = split_data(data)
-    
+    experiments = split_data(data, remove_first=remove_first)
+    print(f"Split data into {len(experiments)} experiments")
     # Output the results (just for demonstration purposes)
     if verbose:
         for i, experiment in enumerate(experiments):

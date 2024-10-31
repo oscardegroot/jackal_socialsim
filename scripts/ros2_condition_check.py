@@ -10,6 +10,8 @@ from geometry_msgs.msg import PoseStamped
 import rclpy.time
 from std_msgs.msg import Empty
 from nav_msgs.msg import Odometry
+from autoware_adapi_v1_msgs.msg import OperationModeState
+from movebox.msg import MoveLatState
 
 import os
 import sys
@@ -28,7 +30,7 @@ class RobotStateMonitor(Node):
         self.condition_type = self.declare_parameter('condition_type', 'close_to_point').value  # 'close_to_point' or 'exceed_value'
         self.target_x = self.declare_parameter('target_x', 0.0).value
         self.target_y = self.declare_parameter('target_y', 0.0).value
-        self.threshold_distance = self.declare_parameter('threshold_distance', 1.0).value
+        self.threshold_distance = self.declare_parameter('threshold_distance', 5.0).value
         self.max_x = self.declare_parameter('max_x', 10.0).value
         self.max_y = self.declare_parameter('max_y', 10.0).value
         self.timeout = self.declare_parameter('timeout', 10.0).value
@@ -42,14 +44,20 @@ class RobotStateMonitor(Node):
         # Subscriber for the robot_state topic
         # self.state_sub = self.create_subscription(PoseStamped, 'robot_state', self.state_callback, 10)
         # self.state_sub = self.create_subscription(PoseStamped, '~/input/state', self.state_callback, 10)
+        self.goal_sub = self.create_subscription(PoseStamped, '/planning/mission_planning/goal', self.goal_callback, 10)
         self.state_sub = self.create_subscription(Odometry, '~/input/state', self.state_callback_odom, 10)
-
+        self.autoware_sub = self.create_subscription(OperationModeState, '/api/operation_mode/state', self.autoware_status_callback, 10)
+        self.subscription = self.create_subscription(MoveLatState,'/movebox/lat_state',
+            self.movebox_callback,
+            10)
         self.reset_sub = self.create_subscription(Empty, '~/input/reset', self.reset_callback, 1)
         self._external_reset = False
 
         self.completions = 0
         self.timeouts = 0
         self.first = True
+        self.start_recording = False
+        self.movebox_autonomous = False
         self.get_logger().info(f"Recording Data...")
 
     def set_data_recorder(self, data_recorder):
@@ -59,12 +67,36 @@ class RobotStateMonitor(Node):
         self.process_state(msg.pose.pose)
 
     def reset_callback(self, msg):
-        self._external_reset = True
+        pass
+        # self._external_reset = True
+
+    def goal_callback(self, msg):
+        self.target_x = msg.pose.position.x
+        self.target_y = msg.pose.position.y
+        self.get_logger().info("Goal received")
 
     def state_callback(self, msg):
         self.process_state(msg.pose)
 
+    def autoware_status_callback(self, msg):
+        if msg.mode == msg.AUTONOMOUS:
+            self.start_recording = True
+        else:
+            self.start_recording = False
+
+    def movebox_callback(self, msg):
+        if msg.control_state_lat == 2:
+            self.movebox_autonomous = True
+        else:
+            self.movebox_autonomous = False
+
     def process_state(self, msg):
+
+        if self.start_recording and self.movebox_autonomous:
+            self.data_recorder.enable_record()
+        else:
+            self.data_recorder.disable_record()
+                
         x = msg.position.x
         y = msg.position.y
 
@@ -107,8 +139,12 @@ class RobotStateMonitor(Node):
         
         if should_reset and elapsed_time > Duration(seconds=1.0):
             self.start_time = self.get_clock().now()  # Prevent double resets
+
+            self.data_recorder.reset_callback(Empty())
+            self.data_recorder.add_data()
+
             self.publish_reset()
-            if self.completions == self.num_experiments:
+            if self.completions == self.num_experiments-1:
                 self.data_recorder.save_data()
                 self.get_logger().info(f"{self.num_experiments} experiments completed!")
                 rclpy.shutdown()
