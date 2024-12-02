@@ -16,8 +16,3 @@ catkin_install_python(PROGRAMS
   scripts/condition_check.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)

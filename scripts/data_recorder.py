@@ -7,7 +7,7 @@ import pathlib
 import copy
 
 from geometry_msgs.msg import PoseStamped
-from mpc_planner_msgs.msg import ObstacleArray, WeightArray  # Replace `your_package` with your actual package name
+from mpc_planner_msgs.msg import ObstacleArray#, WeightArray  # Replace `your_package` with your actual package name
 from std_msgs.msg import String, Empty, Float64
 
 import tf.transformations
@@ -123,7 +123,7 @@ class DataRecorderNode:
         rospy.Subscriber('robot_state', PoseStamped, self.robot_state_callback)
         rospy.Subscriber('pedestrian_simulator/collision_detected', Float64, self.collision_callback)
         rospy.Subscriber('/pedestrian_simulator/trajectory_predictions', ObstacleArray, self.obstacle_callback)
-        rospy.Subscriber('hey_robot/weights', WeightArray, self.weights_callback)
+        # rospy.Subscriber('hey_robot/weights', WeightArray, self.weights_callback)
 
         # Timer for saving data
         self._save_lock = threading.Lock()
