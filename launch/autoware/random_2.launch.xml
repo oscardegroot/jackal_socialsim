@@ -5,12 +5,14 @@
     <arg name="pedestrian_scenario" default="autoware/random_2.xml"/>
     <arg name="experiment" default="test"/>
     <arg name="num_experiments" default="10"/>
+    <arg name="is_simulation" default="false"/>
 
     <!-- Launch a pedestrian and roadmap scenario -->
     <include file="$(find-pkg-share jackal_socialsim)/launch/autoware/autoware_base.launch.xml">
         <arg name="pedestrian_scenario" value="$(var pedestrian_scenario)"/>
         <arg name="test" value="$(var experiment)"/>
         <arg name="num_experiments" value="$(var num_experiments)"/>
+        <arg name="is_simulation" value="$(var is_simulation)"/>
     </include>
 
 

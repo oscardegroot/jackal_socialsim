@@ -1,13 +1,14 @@
 import sys
 
 from metrics import compute_metrics
+from config import Config
 
-def compute_comparison_metrics(base_folder, scenario, experiments, verbose=False):
+def compute_comparison_metrics(base_folder, scenario, experiments, config):
 
     comparison_metrics = []
     
     for experiment in experiments:
-        new_metrics, _ = compute_metrics(base_folder, scenario, experiment, verbose)
+        new_metrics, _ = compute_metrics(base_folder, scenario, experiment, config)
         comparison_metrics.append(new_metrics)
     
     return comparison_metrics
@@ -21,7 +22,9 @@ if __name__ == "__main__":
         "try"
     ]
 
-    comparison_metrics = compute_comparison_metrics(base_folder, scenario, experiments, verbose=False)
+    config = Config()
+
+    comparison_metrics = compute_comparison_metrics(base_folder, scenario, experiments, config)
     for metric in comparison_metrics.keys():
         print(comparison_metrics[metric])
 

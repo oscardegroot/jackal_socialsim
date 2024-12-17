@@ -14,11 +14,14 @@ def load_default_settings(scenarios):
     table["clean_method_name"] = clean_method_name
     table["clean_simulation_name"] = clean_simulation_name
     table["method_order_list"] = method_order_list
-    table["caption"] = lambda num_experiments, num_scenarios: "A comparitive table."
+    table["caption"] = lambda num_experiments, num_scenarios: "A comparative table."
     table["double_highlight"] = []
     return table
 
 def highlight(value, decimals):
+    if value == "-":
+        return value
+    
     value = f'{value:.{decimals}f}'
     return "\\textbf{" + str(value) + "}"
 
@@ -148,7 +151,6 @@ class LatexTable:
         highlighted = self.get_highlighted(metrics)
 
         for m, method_metrics in enumerate(metrics):
-
             for i, data_text in enumerate(self.data_lambdas):
                 if m in highlighted[i]:
                     f.write(data_text(method_metrics, highlight))
@@ -240,15 +242,21 @@ class CombinedLatexTable(LatexTable):
                     self.write_next(f, i, int(m == len(simulation_metrics) - 1))
 
 
-def create_table(base_folder, scenario, experiments, table_settings, verbose=False):
+def create_table(base_folder, scenario, experiments, table_settings, config):
 
-    comparison_metrics = compute_comparison_metrics(base_folder, scenario, experiments, verbose)
-
+    comparison_metrics = compute_comparison_metrics(base_folder, scenario, experiments, config)
     table_folder = f"{base_folder}/tables/{scenario}/"
     table_name = "comparison"
     os.makedirs(table_folder, exist_ok=True)
+
+    from statistic_tests import test_significance
+    test_significance(comparison_metrics, "euler", "metric_duration", verbose=True)
+    test_significance(comparison_metrics, "euler", "res_stat", verbose=True)
+    test_significance(comparison_metrics, "euler", "res_eq", verbose=True)
    
     table = LatexTable(scenario, table_folder + table_name + ".tex", table_settings)
     table_settings["add_table_data"](table)
 
     table.write_table(comparison_metrics, scenario, True)
+    print("Saved table as: " + table_folder + table_name + ".tex")
+    return comparison_metrics

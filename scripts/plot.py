@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from metrics import compute_metrics
+from load_data import load_experiment_data
 from util.utils import translate_positions_to_zero, detect_start_times
 
 fig_width = 7.02625 # /textwidth in latex in inches
@@ -75,6 +76,71 @@ def plot_environment(ax):
     ax.plot([0., 23], [0., 0.], 'k-.', linewidth=lw)
 
     sns.despine(offset=15)
+
+def compare_control_signals(base_folder, scenario, experiments, styles='-', colors=None, remove_first=True, verbose=False):
+
+    if type(styles) == str:
+        s = styles
+        styles = dict()
+        for experiment in experiments:
+            styles[experiment] = s
+
+    if colors is None:
+        colors = dict()
+        for i in range(len(experiments)):
+            colors[experiments[i]] = f'C{i}'
+
+    data = dict()
+    for experiment in experiments:
+        data[experiment] = load_experiment_data(base_folder, scenario, experiment, 
+                                           verbose=verbose, remove_first=remove_first)
+        num_experiments = len(data[experiment])
+
+    for idx in range(num_experiments):
+        fig = plt.figure()
+        ax = plt.gca()
+        t_max = 0
+        for e_idx, experiment in enumerate(experiments):
+            t_max = max(t_max, plot_control_signal(ax, data[experiment][idx]["v"], experiment, 
+                                                   colors[experiment], styles[experiment]))
+            
+        ax.plot([0, t_max], [2.3, 2.3], 'k--', linewidth=2.)
+        plt.xlabel("Time [s]")
+        plt.ylabel("Velocity [m/s]")
+        plt.legend()
+        plt.tight_layout()
+        ax.set_xlim(left=0)
+        ax.set_ylim(bottom=0)
+
+        save_figure_as(fig, base_folder + f"figures/{scenario}/control/", f"v_{idx}", save_pdf=False, ratio=0.25)
+
+
+def plot_control_signal(ax, signal, label, color, style="-"):
+
+    def get_start_time(data):
+        # First remove the start
+        for t in range(len(data)):
+            if data[t] <= 1e-4:
+                start_time = t
+                break
+
+        max_t = 120
+        for t in range(start_time + 1, max_t):
+            
+            if data[t-1] > 0.1 and data[t] <= 1e-3:
+                start_time = t
+                break
+
+        for t in range(start_time, len(data)):
+            if data[t] > 1e-2:
+                return t
+
+    start_time = get_start_time(signal)
+    
+    t_range =  [float(x)*0.05 for x in range(len(signal[start_time:]))]
+    ax.plot(t_range, signal[start_time:], style, color=color, label=label)
+    return t_range[-1]
+
 
 def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True, show_markers=True, marker='.', rotate=False, marker_size=150, alpha=1,**kwargs):
     fig, ax = new_plot(ax)
@@ -182,14 +248,14 @@ def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experimen
 
 def plot_agent_trajectories(base_folder, scenario, experiment, 
                             color_idx=0, external_ax=None, xlim=None, ylim=None, 
-                            translate_to_zero=False, t_start=100, t_final=-18, **kwargs):
+                            translate_to_zero=False, t_start=0, t_final=-1, **kwargs):
 
-    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
+    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False, **kwargs)
 
     start_times = detect_start_times(experiment_data, metrics["num_obstacles"][0])
 
     if translate_to_zero:
-        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], rotate = -np.pi/2.)
+        translate_positions_to_zero(experiment_data, metrics["num_obstacles"][0], t_start=start_times, rotate = -np.pi/2.)
 
     # NOTE Figure per experiment
     t_final = t_final

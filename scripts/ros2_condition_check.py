@@ -52,6 +52,7 @@ class RobotStateMonitor(Node):
             10)
         self.reset_sub = self.create_subscription(Empty, '~/input/reset', self.reset_callback, 1)
         self._external_reset = False
+        self.is_simulation = self.declare_parameter('is_simulation', True).value
 
         self.completions = 0
         self.timeouts = 0
@@ -68,7 +69,9 @@ class RobotStateMonitor(Node):
 
     def reset_callback(self, msg):
         pass
-        # self._external_reset = True
+        # if self.is_simulation:
+            # self.get_logger().info(f"External reset received (Simulation)")
+            # self._external_reset = True
 
     def goal_callback(self, msg):
         self.target_x = msg.pose.position.x
@@ -96,6 +99,9 @@ class RobotStateMonitor(Node):
             self.data_recorder.enable_record()
         else:
             self.data_recorder.disable_record()
+        
+        if self.is_simulation:
+            self.data_recorder.enable_record()
                 
         x = msg.position.x
         y = msg.position.y
@@ -131,7 +137,7 @@ class RobotStateMonitor(Node):
             self._external_reset = False
 
         if not should_reset:
-            if elapsed_time > Duration(seconds=self.timeout):
+            if self.is_simulation and elapsed_time > Duration(seconds=self.timeout):
                 self.get_logger().info("Experiment: Timeout")
                 should_reset = True
                 self.timeouts += 1

@@ -6,6 +6,8 @@ sys.path.append("..")
 from load_data import get_all_experiments_for_scenario
 from table import create_table, load_default_settings
 from plot import plot_agent_trajectories, plot_agent_trajectories_for_all_experiments
+from plot import compare_control_signals
+
 
 
 def one_figure(experiments, base_folder, scenario):
@@ -16,7 +18,14 @@ def one_figure(experiments, base_folder, scenario):
 def figure_per_experiment(experiments, base_folder, scenario):
     # experiments = get_all_experiments_for_scenario(base_folder, scenario)#, filter=["none"])
     for experiment in experiments:
-        plot_agent_trajectories(base_folder, scenario, experiment, translate_to_zero=True, xlim=[-2, 50], ylim=[-20, 10])
+        plot_agent_trajectories(base_folder, scenario, experiment, translate_to_zero=True, xlim=[-2, 50], ylim=[-20, 10], remove_first=True)
+
+
+def control_signals(experiments, base_folder, scenario):
+    #  for experiment in experiments:
+    styles = {"autoware": "-", "lmpcc": "-", "tmpc": "-", "tmpcnf": "--"}
+    colors = {"autoware": "C2", "lmpcc": "C3", "tmpc": "C0", "tmpcnf": "C0"}
+    compare_control_signals(base_folder, scenario, experiments, styles=styles, colors=colors, remove_first=True)
 
 
 def table(experiments, base_folder, scenario):
@@ -26,7 +35,7 @@ def table(experiments, base_folder, scenario):
         if "empty" in scenario:
              scenario_pedestrians = 0
              
-        return f"\\caption{{Scenario: ${scenario_pedestrians}$ randomized pedestrians over $15$ experiments. Reporting task duration, minimum distance to pedestrians, collisions, time-outs (vehicle did not reach the goal in time) and average velocity.}}\\resizebox{{\\textwidth}}{{!}}{{%"
+        return f"\\caption{{Scenario: ${scenario_pedestrians}$ randomized pedestrians over ${num_experiments}$ experiments. Reporting task duration, minimum distance to pedestrians, collisions, time-outs (vehicle did not reach the goal in time) and average velocity.}}\\resizebox{{\\textwidth}}{{!}}{{%"
 
     def add_table_data(table):
         table.add_data("Method", lambda metrics, highlight: table.table_settings["clean_method_name"](metrics["experiment"]), align="l")
@@ -52,9 +61,21 @@ def table(experiments, base_folder, scenario):
         # table.add_data("Runtime (Max) [ms]",
                     #    lambda metrics, highlight: f'{highlight(metrics["runtime"]["mean"] * 1000., 0)} ({metrics["runtime"]["max"] * 1000.:.0f})')
 
+    def clean_method_name(method_name):
+        if method_name == "lmpcc":
+            return "LMPCC"
+        elif method_name == "autoware":
+            return "Autoware"
+        elif method_name == "tmpc":
+            return "T-MPC\\texttt{++}"
+        elif method_name == "tmpcnf":
+            return "T-MPC\\texttt{++} (w/o fallback)"
+
+
     settings = load_default_settings([scenario])
     settings["caption"] = caption
     settings["add_table_data"] = add_table_data
+    settings["clean_method_name"] = clean_method_name
 
     create_table(base_folder, scenario, experiments, settings, verbose=False)
 
@@ -74,6 +95,9 @@ if __name__ == '__main__':
 
     if choice.lower() == "table":
          table(experiments, base_folder, scenario)
+
+    if choice.lower() == "control_signals":
+         control_signals(experiments, base_folder, scenario)
 
     if choice.lower() == "all":
         one_figure(experiments, base_folder, scenario)

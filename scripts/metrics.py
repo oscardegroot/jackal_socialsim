@@ -2,7 +2,8 @@
 import sys
 import numpy as np
 
-from load_data import load_experiment_data
+from load_data import load_experiment_data, remove_experiments_with_timeout
+from config import Config
 
 safe_radius = 0.3 + 0.325 # NOTE: planner uses 0.4, for safety
 
@@ -39,9 +40,18 @@ def load_data_metrics(metrics, experiment_data):
             if "metric" in key:
                 metrics[key].append(value)
 
+def add_data_into_metrics(metrics, experiment_data, key, rename=None):
+    if rename is None:
+        rename = key
+
+    metrics[rename] = []
+    for e in experiment_data:
+        metrics[rename] += e[key]
+    
+
 def add_num_iterations_to_data(experiment_data):
     for e in experiment_data:
-        e["num_iterations"] = len(e["v"])
+        e["num_iterations"] = len(e["runtime_control_loop"])
 
 def add_num_experiments(metrics, experiment_data):
     metrics["num_experiments"] = len(experiment_data)
@@ -57,6 +67,9 @@ def add_num_obstacles(metrics, experiment_data):
     add_metric_to_data(metrics, experiment_data, "num_obstacles")
 
 def add_obstacle_clearance(metrics, experiment_data):
+    if "pos" not in experiment_data[0].keys():
+        return
+    
     assert "num_obstacles" in metrics.keys(), "Number of obstacles should be computed before computing the clearance"
 
     for e in experiment_data:
@@ -79,19 +92,84 @@ def add_obstacle_clearance(metrics, experiment_data):
     add_mean_min_max_std(metrics, experiment_data, "obstacle_clearance", "obstacle_clearance")
 
 def add_average_velocity(metrics, experiment_data):
-    add_mean_min_max_std(metrics, experiment_data, "v", "velocity")
+    if "v" in experiment_data[0].keys():
+        add_mean_min_max_std(metrics, experiment_data, "v", "velocity")
 
-# def save_metrics(metrics):
+def add_solver_stats(metrics, experiment_data):
 
-def compute_metrics(base_folder, scenario, experiment, verbose=False):
+    if "res_eq_1" not in experiment_data[0].keys():
+        print("Solver stats are not in this data file")
+
+    def get_all_valid(experiment_data, key):
+        result = []
+        for e in experiment_data:
+            result += [v for v in e[key] if v != -1 and v < 10.]
+        return result
+    
+    def get_count(experiment_data, key, count_if=1):
+        result = []
+        all = []
+        for e in experiment_data:
+            result += [v for v in e[key] if v == count_if]
+            all += e[key]
+        return len(result), len(all)
+
+    num_solvers = 0
+    for i in range(1,100):
+        if f"res_eq_{i}" not in experiment_data[0].keys():
+            num_solvers = i
+            break
+
+    res_eq = []
+    res_ineq = []
+    res_stat = []
+
+    feasible_count = feasible_total = 0
+    stop_early_count = stop_early_total = 0
+    for i in range(1, num_solvers):
+        res_eq += get_all_valid(experiment_data, f"res_eq_{i}")
+        res_ineq += get_all_valid(experiment_data, f"res_ineq_{i}")
+        res_stat += get_all_valid(experiment_data, f"res_stat_{i}")
+
+        f, total = get_count(experiment_data, f"feasible_{i}")
+        feasible_count += f
+        feasible_total += total
+
+        s, stotal = get_count(experiment_data, f"stop_early_{i}")
+        stop_early_count += s
+        stop_early_total += stotal
+    
+
+    metrics["res_eq"] = res_eq
+    metrics["res_ineq"] = res_ineq
+    metrics["res_stat"] = res_stat
+
+    metrics["feasible_perc"] = float(feasible_count) / float(feasible_total) * 100.
+    metrics["stop_early_perc"] = float(stop_early_count) / float(stop_early_total) * 100.
+
+
+def add_inference_time(metrics, experiment_data):
+
+    if "runtime_learned_guess" not in experiment_data[0].keys():
+        metrics["inference_time"] = "-"
+    else:
+        add_data_into_metrics(metrics, experiment_data, key="runtime_learned_guess", rename="inference_time")
+
+
+def compute_metrics(base_folder, scenario, experiment, config):    
     # Call the main function with the given inputs
-    experiment_data = load_experiment_data(base_folder, scenario, experiment, verbose=verbose)
+    experiment_data = load_experiment_data(base_folder, scenario, experiment, config)
 
     metrics = dict()
     metrics["scenario"] = scenario
     metrics["experiment"] = experiment
 
     load_data_metrics(metrics, experiment_data)
+
+    timeouts = [False] + [v > 37. for v in metrics["metric_duration"]]
+    experiment_data = remove_experiments_with_timeout(experiment_data, timeouts)
+
+    metrics["metric_duration"] = [v for v in metrics["metric_duration"] if v <= 37.]
 
     add_num_iterations_to_data(experiment_data)
 
@@ -101,7 +179,12 @@ def compute_metrics(base_folder, scenario, experiment, verbose=False):
     add_average_velocity(metrics, experiment_data)
     add_obstacle_clearance(metrics, experiment_data)
 
-    if verbose:
+    add_solver_stats(metrics, experiment_data)
+    add_inference_time(metrics, experiment_data)
+
+    add_data_into_metrics(metrics, experiment_data, key="runtime_control_loop", rename="runtime")
+
+    if config.verbose:
         for name, value in metrics.items():
             print(f"{name}: {value}")
     
@@ -113,5 +196,7 @@ if __name__ == "__main__":
     scenario = sys.argv[2]
     experiment = sys.argv[3]
 
-    compute_metrics(base_folder, scenario, experiment, verbose=True)
+    config = Config(load_json=False, verbose=True)
+
+    compute_metrics(base_folder, scenario, experiment, config)
     

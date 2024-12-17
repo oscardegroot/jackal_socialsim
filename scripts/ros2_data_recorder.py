@@ -7,6 +7,7 @@ import os
 import pathlib
 import copy
 import math
+from rclpy.time import Duration
 
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
@@ -138,10 +139,15 @@ class DataRecorderNode():
         self._save_lock = threading.Lock()
         self.save_timer = node.create_timer(self.save_interval_s, self.add_data)
         self._node.get_logger().info(f"Timer created")
+        self._last_reset_time = self._node.get_clock().now()
+
 
     def reset_callback(self, msg):
-        self._reset = True
-        self._node.get_logger().info(f"Received reset!")
+        elapsed_time = self._node.get_clock().now() - self._last_reset_time
+        if elapsed_time > Duration(seconds=1.0):
+            self._last_reset_time = self._node.get_clock().now()
+            self._reset = True
+            self._node.get_logger().info(f"Received reset!")
 
     def timeout_callback(self, msg):
         self._timeout_received = True
@@ -177,8 +183,6 @@ class DataRecorderNode():
             return
 
         with self._save_lock:
-            self._node.get_logger().info("RECORDING")
-
             if self._state_msg and self._obs_msg:
                 self._data.new_iteration()
 

@@ -10,6 +10,8 @@
 
     <arg name="with_planner" default="false"/>
 
+    <arg name="is_simulation" default="false"/>
+
     <include file="$(find-pkg-share mpc_planner_autoware)/launch/ros2_autoware.launch" if="$(var with_planner)">
         <arg name="standalone_mode" value="true"/>
     </include>
@@ -20,20 +22,21 @@
     </include>
 
     <!-- <include file="$(find-pkg-share dummy_perception_publisher)/launch/dummy_perception_publisher.launch.xml"> -->
-        <!-- <arg name="use_object_recognition" value="true"/> -->
+    <!-- <arg name="use_object_recognition" value="true"/> -->
     <!-- </include> -->
 
     <node pkg="jackal_socialsim" exec="ros2_condition_check.py" name="ros2_condition_check" output="screen">
         <remap from="~/input/state" to="/localization/kinematic_state"/>
         <remap from="~/input/reset" to="/planning/mpc_planner_plugin/trigger_goal"/>
         <param name="num_experiments" value="$(var num_experiments)"/>
-        <param name="timeout" value="400.0"/>
+        <param name="timeout" value="40.0"/>
         <param name="scenario" value="$(var pedestrian_scenario)"/>
         <param name="experiment" value="$(var experiment)"/>
         <param name="condition_type" value="close_to_point"/>
         <param name="target_x" value="94084.8"/>
         <param name="target_y" value="61848.8"/>
-        <param name="threshold_distance" value="5.0"/> 
+        <param name="threshold_distance" value="5.0"/>
+        <param name="is_simulation" value="$(var is_simulation)"/>
     </node>
 
 </launch>  
