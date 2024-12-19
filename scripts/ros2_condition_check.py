@@ -39,6 +39,7 @@ class RobotStateMonitor(Node):
 
         # Publisher for the reset topic
         self.reset_pub = self.create_publisher(Empty, '/jackal_socialsim/reset', 10)
+        self.done_pub = self.create_publisher(Empty, '/jackal_socialsim/done', 10)
         self.goal_pub = self.create_publisher(PoseStamped, '/move_base_simple/goal', 5)
 
         # Subscriber for the robot_state topic
@@ -153,6 +154,7 @@ class RobotStateMonitor(Node):
             if self.completions == self.num_experiments-1:
                 self.data_recorder.save_data()
                 self.get_logger().info(f"{self.num_experiments} experiments completed!")
+                self.publish_done()
                 rclpy.shutdown()
             else:
                 self.completions += 1
@@ -160,7 +162,7 @@ class RobotStateMonitor(Node):
 
     def publish_reset(self):
         # Publish an empty message to reset the simulation
-        self.get_logger().info(f"Published Reset Message")
+        self.get_logger().info(f"Published RESET Message")
         self.reset_pub.publish(Empty())
         self.publish_goal()
         # timer = self.create_rate(5)
@@ -169,6 +171,10 @@ class RobotStateMonitor(Node):
             # self.publish_goal()
 
         self.start_time = self.get_clock().now()
+
+    def publish_done(self):
+        self.get_logger().info(f"Published DONE message")
+        self.done_pub.publish(Empty())
 
     def publish_timeout(self):
         self.data_recorder.timeout_callback(Empty())

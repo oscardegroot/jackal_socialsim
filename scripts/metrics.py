@@ -19,7 +19,6 @@ def add_mean_min_max_std(metrics, experiment_data, key, metric_name):
 
     for e in experiment_data:
         metrics[metric_name]["mean"].append(np.mean(e[key]))
-        # print(e[key])
         metrics[metric_name]["min"].append(np.min(e[key]))
         metrics[metric_name]["max"].append(np.max(e[key]))
         metrics[metric_name]["std"].append(np.std(e[key]))
@@ -41,6 +40,9 @@ def load_data_metrics(metrics, experiment_data):
                 metrics[key].append(value)
 
 def add_data_into_metrics(metrics, experiment_data, key, rename=None):
+    if key not in experiment_data[0].keys():
+        return
+
     if rename is None:
         rename = key
 
@@ -51,7 +53,10 @@ def add_data_into_metrics(metrics, experiment_data, key, rename=None):
 
 def add_num_iterations_to_data(experiment_data):
     for e in experiment_data:
-        e["num_iterations"] = len(e["runtime_control_loop"])
+        if "runtime_control_loop" in e.keys():
+            e["num_iterations"] = len(e["runtime_control_loop"])
+        else:
+             e["num_iterations"] = len(e["orientation"])
 
 def add_num_experiments(metrics, experiment_data):
     metrics["num_experiments"] = len(experiment_data)
@@ -69,10 +74,10 @@ def add_num_obstacles(metrics, experiment_data):
 def add_obstacle_clearance(metrics, experiment_data):
     if "pos" not in experiment_data[0].keys():
         return
-    
+
     assert "num_obstacles" in metrics.keys(), "Number of obstacles should be computed before computing the clearance"
 
-    for e in experiment_data:
+    for e_idx, e in enumerate(experiment_data):
         e["obstacle_clearance"] = []
         for t in range(e["num_iterations"]):
             pos = np.array(e["pos"][t])
@@ -85,9 +90,10 @@ def add_obstacle_clearance(metrics, experiment_data):
                 obs_pos = np.array(e[f"obstacle_{i}_pos"][t])
                 clearance = np.linalg.norm(pos - obs_pos) - safe_radius
                 min_clearance = min(min_clearance, clearance)
-            
             if min_clearance != 1e9:
-                e["obstacle_clearance"].append(min_clearance)
+                experiment_data["obstacle_clearance"].append(min_clearance)
+                
+    print(min_clearance)
 
     add_mean_min_max_std(metrics, experiment_data, "obstacle_clearance", "obstacle_clearance")
 
@@ -98,7 +104,8 @@ def add_average_velocity(metrics, experiment_data):
 def add_solver_stats(metrics, experiment_data):
 
     if "res_eq_1" not in experiment_data[0].keys():
-        print("Solver stats are not in this data file")
+        # print("Solver stats are not in this data file")
+        return
 
     def get_all_valid(experiment_data, key):
         result = []
@@ -123,6 +130,7 @@ def add_solver_stats(metrics, experiment_data):
     res_eq = []
     res_ineq = []
     res_stat = []
+    num_iterations = []
 
     feasible_count = feasible_total = 0
     stop_early_count = stop_early_total = 0
@@ -130,6 +138,7 @@ def add_solver_stats(metrics, experiment_data):
         res_eq += get_all_valid(experiment_data, f"res_eq_{i}")
         res_ineq += get_all_valid(experiment_data, f"res_ineq_{i}")
         res_stat += get_all_valid(experiment_data, f"res_stat_{i}")
+        num_iterations += [v - 1 for v in get_all_valid(experiment_data, f"iterations_{i}")]
 
         f, total = get_count(experiment_data, f"feasible_{i}")
         feasible_count += f
@@ -143,6 +152,7 @@ def add_solver_stats(metrics, experiment_data):
     metrics["res_eq"] = res_eq
     metrics["res_ineq"] = res_ineq
     metrics["res_stat"] = res_stat
+    metrics["num_iterations"] = num_iterations
 
     metrics["feasible_perc"] = float(feasible_count) / float(feasible_total) * 100.
     metrics["stop_early_perc"] = float(stop_early_count) / float(stop_early_total) * 100.
@@ -156,6 +166,34 @@ def add_inference_time(metrics, experiment_data):
         add_data_into_metrics(metrics, experiment_data, key="runtime_learned_guess", rename="inference_time")
 
 
+def add_collisions(metrics, experiment_data):
+    collisions = []
+    for e in experiment_data:
+        if np.sum(e["metric_collisions"]) != 0:
+            collisions.append(1)
+        else:
+            collisions.append(0)
+    metrics["metric_collisions"] = collisions
+
+def add_feasibility(metrics, experiment_data):
+    if "status" not in experiment_data[0].keys():
+        return
+
+    feasible_iterations = 0
+    num_iterations = 0
+    for e in experiment_data:
+        for t, status in enumerate(e["status"]):
+            if t < 80:
+                continue
+            if t > len(e["status"]) - 40:
+                continue
+
+            num_iterations += 1
+            if status == 2:
+                feasible_iterations += 1
+
+    metrics["planner_feasible_percentage"] = float(feasible_iterations) / float(num_iterations) * 100.
+
 def compute_metrics(base_folder, scenario, experiment, config):    
     # Call the main function with the given inputs
     experiment_data = load_experiment_data(base_folder, scenario, experiment, config)
@@ -166,10 +204,11 @@ def compute_metrics(base_folder, scenario, experiment, config):
 
     load_data_metrics(metrics, experiment_data)
 
-    timeouts = [False] + [v > 37. for v in metrics["metric_duration"]]
-    experiment_data = remove_experiments_with_timeout(experiment_data, timeouts)
+    if not config.load_json:
+        timeouts = [False] + [v > 37. for v in metrics["metric_duration"]]
+        experiment_data = remove_experiments_with_timeout(experiment_data, timeouts)
 
-    metrics["metric_duration"] = [v for v in metrics["metric_duration"] if v <= 37.]
+        metrics["metric_duration"] = [v for v in metrics["metric_duration"] if v <= 37.]
 
     add_num_iterations_to_data(experiment_data)
 
@@ -177,12 +216,15 @@ def compute_metrics(base_folder, scenario, experiment, config):
     add_num_obstacles(metrics, experiment_data)
 
     add_average_velocity(metrics, experiment_data)
-    add_obstacle_clearance(metrics, experiment_data)
+    # add_obstacle_clearance(metrics, experiment_data)
+    add_collisions(metrics, experiment_data)
+    add_feasibility(metrics, experiment_data)
 
     add_solver_stats(metrics, experiment_data)
     add_inference_time(metrics, experiment_data)
 
     add_data_into_metrics(metrics, experiment_data, key="runtime_control_loop", rename="runtime")
+    add_data_into_metrics(metrics, experiment_data, key="gmpcc_objective", rename="cost")
 
     if config.verbose:
         for name, value in metrics.items():

@@ -5,7 +5,7 @@ import glob
 from config import Config
 
 def is_continuous_data(data_name):
-    return "metric" not in data_name and "scenario" not in data_name and "experiment" not in data_name
+    return "metric_collisions" in data_name or ("metric" not in data_name and "scenario" not in data_name and "experiment" not in data_name)
 
 # Default format: .json
 def load_data(base_folder, scenario, experiment):
@@ -36,7 +36,7 @@ def load_txt_data(base_folder, scenario, experiment):
     
 
 
-def split_data(data, remove_first=True):
+def split_data(data, config):
     # Extract the reset values from the dictionary
     reset_values = data["reset"]
     
@@ -55,18 +55,19 @@ def split_data(data, remove_first=True):
         datasets.append(subset)
         start_index = end_index
 
-    print(f"Splitting data into {len(datasets)} experiments")
+    if config.verbose:
+        print(f"Splitting data into {len(datasets)} experiments")
 
     # Insert metrics for each simulation (one entry per simulation)
     for key, value in data.items():
         if "metric" in key:
             if len(value) > len(datasets):
-                print(f"Metric {key} contains more values than there were experiments.")
+                print(f"Metric {key} contains more values than there were experiments ({len(value)} received).")
                 continue
             for v in range(1, len(value)): # Skip the first
                 datasets[v-1][key] = value[v]
 
-    if remove_first:
+    if config.remove_first:
         datasets.pop(0)
     
     return datasets
@@ -83,8 +84,8 @@ def load_experiment_data(base_folder, scenario, experiment, config):
         data = load_txt_data(base_folder, scenario, experiment)
 
     # Split the data into datasets
-    experiments = split_data(data, remove_first=config.remove_first)
-    print(f"Split data into {len(experiments)} experiments")
+    experiments = split_data(data, config)
+
     # Output the results (just for demonstration purposes)
     if config.verbose:
         for i, experiment in enumerate(experiments):

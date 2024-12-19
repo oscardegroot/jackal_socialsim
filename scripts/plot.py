@@ -203,11 +203,11 @@ def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True,
 
     return fig, ax
 
-def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, color_idx=0,
+def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experiment, config, color_idx=0,
                                                  external_ax=None, xlim=None, ylim=None, t_final=-18, translate_to_zero=False, **kwargs):
     set_font(latex=True, fontsize=22)
     name = experiment.split(" ")[-1].split(".")[0].lower()
-    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False)
+    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, config)
 
     start_times = detect_start_times(experiment_data, metrics["num_obstacles"][0])
     t_start = start_times[0]
@@ -246,11 +246,11 @@ def plot_agent_trajectories_for_all_experiments(base_folder, scenario, experimen
 
     save_figure_as(fig, base_folder + f"figures/{scenario}/{experiment}/", f"trajectories_{name}", save_pdf=True)
 
-def plot_agent_trajectories(base_folder, scenario, experiment, 
+def plot_agent_trajectories(base_folder, scenario, experiment, config,
                             color_idx=0, external_ax=None, xlim=None, ylim=None, 
                             translate_to_zero=False, t_start=0, t_final=-1, **kwargs):
 
-    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, verbose=False, **kwargs)
+    metrics, experiment_data = compute_metrics(base_folder, scenario, experiment, config)
 
     start_times = detect_start_times(experiment_data, metrics["num_obstacles"][0])
 
@@ -271,6 +271,22 @@ def plot_agent_trajectories(base_folder, scenario, experiment,
         if ylim is not None:
             ax.set_ylim(ylim)
         save_figure_as(fig, base_folder + f"figures/{scenario}/{experiment}/", f"trajectories_{e_idx}", save_pdf=False)
+
+def plot_duration(base_folder, scenario, experiments, config):
+    plt.figure()
+    m = dict()
+    for e in experiments:
+        metrics, experiment_data = compute_metrics(base_folder, scenario, e, config)
+        m[e] = metrics["metric_duration"]
+        
+        # plt.boxplot(metrics["metric_duration"])
+    plt.boxplot(m.values())
+    ax = plt.gca()
+    ax.set_xticklabels(m.keys())
+        # plt.title(e)
+    plt.show()
+
+
 
 if __name__ == "__main__":
     # Example usage

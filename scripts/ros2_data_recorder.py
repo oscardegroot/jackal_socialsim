@@ -131,7 +131,7 @@ class DataRecorderNode():
         node.create_subscription(Empty, '/condition_check/timeout', self.timeout_callback, 10)
         # self.create_subscription(PoseStamped, '~/input/state', self.robot_state_callback, 10)
         node.create_subscription(Odometry, '~/input/state', self.robot_state_odom_callback, 10)
-        node.create_subscription(Float64, 'pedestrian_simulator/collision_detected', self.collision_callback, 10)
+        node.create_subscription(Float64, '/pedestrian_simulator/collision_detected', self.collision_callback, 10)
         node.create_subscription(ObstacleArray, '/pedestrian_simulator/trajectory_predictions', self.obstacle_callback, 10)
         # self.create_subscription(WeightArray, 'hey_robot/weights', self.weights_callback, 10)
 

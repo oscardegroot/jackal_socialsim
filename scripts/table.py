@@ -245,14 +245,10 @@ class CombinedLatexTable(LatexTable):
 def create_table(base_folder, scenario, experiments, table_settings, config):
 
     comparison_metrics = compute_comparison_metrics(base_folder, scenario, experiments, config)
+
     table_folder = f"{base_folder}/tables/{scenario}/"
     table_name = "comparison"
     os.makedirs(table_folder, exist_ok=True)
-
-    from statistic_tests import test_significance
-    test_significance(comparison_metrics, "euler", "metric_duration", verbose=True)
-    test_significance(comparison_metrics, "euler", "res_stat", verbose=True)
-    test_significance(comparison_metrics, "euler", "res_eq", verbose=True)
    
     table = LatexTable(scenario, table_folder + table_name + ".tex", table_settings)
     table_settings["add_table_data"](table)

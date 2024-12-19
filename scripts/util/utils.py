@@ -37,14 +37,23 @@ def translate_positions_to_zero(experiment_data, num_obstacles, rotate=0, t_star
             t_start_cur = t_start[e_idx]
         else:
             t_start_cur = t_start
+
         pos_data = e["pos"][t_start_cur:t_final]
-        for cur_t in range(len(pos_data)):
+        if len(pos_data) < 2:
+            continue
+
+        t = -1
+        for cur_t in range(len(pos_data) - 1):
             if np.linalg.norm(np.array(pos_data[cur_t+1]) - np.array(pos_data[cur_t])) > 1e-1:
                 t = cur_t
                 break
-    
+        if t == -1:
+            continue
+        
+
         zero = np.array(pos_data[0])
-        psi = math.atan2(pos_data[t+1][1] - pos_data[t][1], pos_data[t+1][0] - pos_data[t][0])
+        # psi = math.atan2(pos_data[t+1][1] - pos_data[t][1], pos_data[t+1][0] - pos_data[t][0])
+        psi = e["orientation"][t]
         R = rotation_matrix(-psi + rotate)
 
         experiment_data[e_idx]["pos"] = [np.dot(R, e- zero) for e in experiment_data[e_idx]["pos"]]
@@ -70,9 +79,11 @@ def detect_start_times(experiment_data, num_obstacles):
             t_test = 0
             while prev_pos[0] == -1000000000.0: # Filter for cases where the obstacle is missing!
                 t_test += 1
+                if t_test >= len(obs_pos):
+                    break
                 prev_pos = obs_pos[t_test]
             # print(f"valid at t = {t_test}, value = {prev_pos}")
-            for cur_t in range(t_test+1, round(len(obs_pos) / 2)): # The switch should happen at the start somewhere
+            for cur_t in range(t_test+1, math.floor(len(obs_pos) / 2)): # The switch should happen at the start somewhere
                 # Filter for cases where the obstacle is missing!
                 if(prev_pos[0] == -1000000000.0 or obs_pos[cur_t][0] == -1000000000.0):
                     continue
