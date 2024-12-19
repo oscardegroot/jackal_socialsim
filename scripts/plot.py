@@ -147,6 +147,8 @@ def plot_trajectory(trajectory, ax=None, t_start=0, t_final=-1, show_trace=True,
 
     trajectory = trajectory[t_start:t_final]
     trajectory = np.reshape(trajectory, (-1, 2))
+    if trajectory.shape[0] == 0:
+        return fig, ax
 
     if show_markers:
         temp_kwargs = kwargs
